@@ -1,1 +1,78 @@
-version: "3.8"
+version: "3"
+networks:
+  cfnet:
+    name: cfnet
+    internal: true
+  outside:
+    name: outside
+    internal: false
+
+services:
+
+  # Secure remote connection to the containers
+  cloudflared:
+    image: wisdomsky/cloudflared-web:latest
+    container_name: cloudflared
+    restart: always
+    networks:
+      - cfnet
+      - outside
+    ports:
+      - 14333:14333
+    environment:
+      WEBUI_PORT: 14333
+    volumes:
+      - ${APPDATA}/cloudflared:/config
+
+  # Speedtest from the server
+  speedtest:
+    image: adolfintel/speedtest
+    container_name: speedtest
+    restart: unless-stopped
+    networks:
+      - cfnet
+    environment:
+      - MODE=standalone
+
+  # Check the status of the running containers
+  uptime-kuma:
+    image: louislam/uptime-kuma
+    container_name: uptime-kuma
+    restart: always
+    networks:
+      - cfnet
+    volumes:
+      - ${APPDATA}/uptime-kuma:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  # Automatically update the simplemeal container when triggered by the github action
+  watchtower:
+    container_name: watchtower
+    image: containrrr/watchtower
+    restart: always
+    network_mode: service:cloudflared
+    environment:
+      - TZ=America/Toronto
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_NO_STARTUP_MESSAGE=true
+      - WATCHTOWER_NOTIFICATION_URL=discord://${WATCHTOWER_DISCORD_WEBHOOK_TOKEN}@${WATCHTOWER_DISCORD_WEBHOOK_ID}
+      - WATCHTOWER_HTTP_API_UPDATE=true
+      - WATCHTOWER_HTTP_API_TOKEN=${WATCHTOWER_HTTP_API_TOKEN}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: simplemeal-app
+
+  # View the logs of the running containers
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: dozzle
+    restart: always
+    networks:
+      - cfnet
+    environment:
+      - DOZZLE_AUTH_PROVIDER=simple
+      # - DOZZLE_HOSTNAME=logs.simplemeal.live
+      - DOZZLE_ENABLE_ACTIONS=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${APPDATA}/dozzle:/data

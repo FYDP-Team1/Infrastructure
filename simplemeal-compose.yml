@@ -1,0 +1,38 @@
+version: "3"
+networks:
+  cfnet:
+    name: cfnet
+    external: true
+  simplemeal:
+    name: simplemeal
+    internal: true
+
+services:
+  simplemeal-app:
+    image: ghcr.io/fydp-team1/simple-meal:latest
+    container_name: simplemeal-app
+    restart: unless-stopped
+    networks:
+      - cfnet
+      - simplemeal
+    env_file:
+      - simplemeal.env
+    volumes:
+      - ${APPDATA}/simplemeal/recipe_images.tar:/app/recipe_images.tar
+
+  simplemeal-db:
+    container_name: simplemeal-db
+    image: postgres:16-bookworm
+    restart: unless-stopped
+    networks:
+      - simplemeal
+    env_file:
+      - simplemeal.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+      # Initialize the database with some tables and data
+      - ./database_seed/table.sql:/docker-entrypoint-initdb.d/1-table.sql
+      - ./database_seed/seed.sql:/docker-entrypoint-initdb.d/2-seed.sql
+
+volumes:
+  postgres_data:
