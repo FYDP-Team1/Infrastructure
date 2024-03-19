@@ -26,6 +26,8 @@ services:
     restart: unless-stopped
     networks:
       - simplemeal
+    environment:
+      POSTGRES_DB: simple_meal
     env_file:
       - simplemeal.env
     volumes:
