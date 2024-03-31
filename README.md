@@ -1,5 +1,7 @@
 # Deployment for Simple Meal
 
+![System Diagram](./diagrams/system_diagram.png)
+
 ## Prerequisites
 
 - A Docker host system
