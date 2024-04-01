@@ -23,9 +23,9 @@ with Diagram(
     with Cluster("Infrastructure"):
         (
             ProxmoxVE("Proxmox VE\nServer")
-            << Edge(color="royalblue", label="runs on")
+            << Edge(label="runs on")
             << Ubuntu("Ubuntu\nOperating System")
-            << Edge(color="royalblue", label="runs on")
+            << Edge(label="runs on")
             << Docker("Docker")
         )
 
@@ -70,3 +70,15 @@ with Diagram(
     food_com >> Edge(color="firebrick") >> pipeline
     bluecart >> Edge(color="firebrick") >> pipeline
     pipeline >> Edge(color="firebrick", label="seed") >> database
+
+with Diagram("Legend", "diagrams/legend", show=False) as legend:
+    l1 = Custom("", "")
+    r1 = Custom("", "")
+    l2 = Custom("", "")
+    r2 = Custom("", "")
+    l3 = Custom("", "")
+    r3 = Custom("", "")
+
+    l1 << Edge(color="darkorange", label="User Interaction") >> r1
+    l2 >> Edge(color="firebrick", label="Data Pipeline") >> r2
+    l3 >> Edge(color="royalblue", label="Automated Deployment") >> r3
